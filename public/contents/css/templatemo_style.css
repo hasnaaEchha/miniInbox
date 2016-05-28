@@ -46,7 +46,7 @@ body {
     height: 100vh;
 }
 /***** Typography *****/
-body, p, a, th, td, li, dl, .form-control { font: normal normal 300 18px/2em 'Fira Sans';}
+body, p, a, th, td, li, dl { font: normal normal 300 18px/2em 'Fira Sans';}
 b, strong, dt { font-weight: 400;}
 h1, h2, h3, h4, h5, h6 { line-height: 2em;}
 /***** Material Shadow *****/
@@ -81,10 +81,7 @@ form textarea.form-control:focus {
     border-bottom-color: #c0c0c0;
     box-shadow: none;
 }
-form button.form-control {
-    background-color: #275267;
-    transition: .5s;
-}
+
 form button.form-control[type=reset] { background-color: transparent;}
 form button.form-control:hover,
 form button.form-control:focus {

@@ -12,35 +12,39 @@ var googleAuth = require('google-auth-library');
 
 app.use(express.static(__dirname + '/public'));
 app.use(morgan('dev'));
-app.use(morgan('dev'));                                         
-app.use(bodyParser.urlencoded({'extended':'true'}));            
-app.use(bodyParser.json());                                     
-app.use(bodyParser.json({ type: 'application/vnd.api+json' })); 
+app.use(morgan('dev'));                                         // log every request to the console
+app.use(bodyParser.urlencoded({'extended':'true'}));            // parse application/x-www-form-urlencoded
+app.use(bodyParser.json());                                     // parse application/json
+app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
 app.use(methodOverride());
 
 
+
+
+/// / If modifying these scopes, delete your previously saved credentials
+        // at ~/.credentials/gmail-nodejs-quickstart.json
 var SCOPES = ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/contacts.readonly'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail-nodejs-quickstart.json';
-var clientSecret,clientId, redirectUrl, auth, oauth2Client;
+var clientSecret,clientId, redirectUrl, auth, oauth2Client, gmail;
 app.get('/google/getCode', function(req, res) {
   console.log('get');
-
+  // Load client secrets from a local file.
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     if (err) {
       console.log('Error loading client secret file: ' + err);
 
       return;
     }
-
-
+    // Authorize a client with the loaded credentials, then call the
+    // Gmail API.
     clientSecret = JSON.parse(content).web.client_secret;
     clientId = JSON.parse(content).web.client_id;
     redirectUrl = JSON.parse(content).web.redirect_uris[0];
     auth = new googleAuth();
     oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
-
+    // Check if we have previously stored a token.
     fs.readFile(TOKEN_PATH, function(err, token) {
       
           var authUrl = oauth2Client.generateAuthUrl({
@@ -53,7 +57,8 @@ app.get('/google/getCode', function(req, res) {
   });
 
 
-
+  // use mongoose to get all todos in the database
+  //res.send('get accepted');
 });
 
 app.get('/google/getToken',function(req,res){  
@@ -66,19 +71,54 @@ app.get('/google/getToken',function(req,res){
     }
     oauth2Client.credentials = token;
     console.log(token);
+
     res.send(token);
     listLabels(oauth2Client);
   });
 })
 
 app.get('*', function(req, res) {
-        res.sendfile('./public/index.html'); 
+        res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
 });
 
-    
-    app.post('/google/send', function(req, res) {
-        console.log(req.body.message);
-        res.send('post accepted');
+    // create todo and send back all todos after creation
+app.post('/google/send', function(req, res) {
+    console.log(req.body.message);
+    var email_lines = [];
+
+    email_lines.push("From: \"Some Name Here\" <me>");
+    email_lines.push("To: hasnaa.ech@gmail.com");
+    email_lines.push('Content-type: text/html;charset=iso-8859-1');
+    email_lines.push('MIME-Version: 1.0');
+    email_lines.push("Subject: New future subject here");
+    email_lines.push("");
+    email_lines.push("And the body text goes here");
+    email_lines.push("<b>And the bold text goes here</b>");
+
+    var email =email_lines.join("\r\n").trim();
+
+    var base64EncodedEmail = new Buffer(email).toString('base64');
+    base64EncodedEmail = base64EncodedEmail.replace(/\+/g, '-').replace(/\//g, '_');
+    gmail.users.messages.send({
+      auth: oauth2Client,
+      userId: "me",
+      resource: 
+      {
+           raw: base64EncodedEmail
+      }           
+    })
+    res.send('post accepted');
+});
+
+
+
+
+
+
+    // delete a todo
+    app.delete('/api/todos/:todo_id', function(req, res) {
+        console.log('delete request');
+        res.send('delete accepted');
     });
 
     
@@ -176,7 +216,7 @@ function storeToken(token) {
  */
 function listLabels(auth) {
         console.log('listLabels');
-  var gmail = google.gmail('v1');
+  gmail = google.gmail('v1');
   gmail.users.labels.list({
     auth: auth,
     userId: 'me'
