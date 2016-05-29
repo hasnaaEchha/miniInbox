@@ -8,7 +8,9 @@ var fs = require('fs');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
-
+var request = require('request');
+var OAuth2 = require('oauth').OAuth2;
+var FB = require('fb');
 
 app.use(express.static(__dirname + '/public'));
 app.use(morgan('dev'));
@@ -19,25 +21,83 @@ app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse applica
 app.use(methodOverride());
 
 
-
-
 /// / If modifying these scopes, delete your previously saved credentials
         // at ~/.credentials/gmail-nodejs-quickstart.json
 var SCOPES = ['https://www.googleapis.com/auth/gmail.send', 'https://www.googleapis.com/auth/contacts.readonly'];
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'gmail-nodejs-quickstart.json';
-var clientSecret,clientId, redirectUrl, auth, oauth2Client, gmail;
+var clientSecret,clientId, redirectUrl, auth,oauth2Client;
+var FACEBOOK_SCOPE = 'user_friends,pages_messaging,read_custom_friendlists';
+var FACEBOOK_REDIRECT_URL = "http://localhost:3000/" ;
+var oauth2 = new OAuth2("1559740410998013",
+                        "d99cc2bba737fdecfe66dcb03eea7f94",
+                       "", "https://www.facebook.com/dialog/oauth",
+                   "https://graph.facebook.com/oauth/access_token",
+                   null);
+  
+app.get('/facebook/getCode',function (req, res) {
+      
+      var params = {'redirect_uri': FACEBOOK_REDIRECT_URL, 'scope':FACEBOOK_SCOPE};
+      res.send(oauth2.getAuthorizeUrl(params));
+});
+app.get("/facebook/getToken", function (req, res) {
+  var loginCode = req.param('code');
+  oauth2.getOAuthAccessToken(loginCode, { grant_type: 'authorization_code', redirect_uri: FACEBOOK_REDIRECT_URL}, 
+   function(err, accessToken, refreshToken, params){
+    if (err) {
+     console.error(err);
+   res.send(err);
+    }
+    var access_token = accessToken;
+    res.send(access_token);
+  });
+ 
+})
+app.post('/facebook/getContacts', function(req, res) {
+  accessToken = req.body.token;
+ oauth2.get("https://graph.facebook.com/me/taggable_friends?limit=1000", accessToken, function(err, data ,response) {
+  if (err) {
+   console.error(err);
+   res.send(err);
+  } else {
+   var friends = JSON.parse(data);
+   console.log(friends);
+   res.send(friends);
+   
+  }
+ });
+});
+app.post('/facebook/send',function(req,res){
+  msg = req.body.msg;
+  recipientId = req.body.recId;
+  accessToken = req.body.accessToken;
+  console.log(recipientId);
+  data = {
+    message : {text:msg},
+    recipient:{id:recipientId}
+  }
+  
+  res.redirect("http://www.facebook.com/dialog/send?");
+  /*request.post({url:"https://graph.facebook.com/v2.6/me/messages?access_token="+accessToken,oauth: data },
+        function (error, response, body) {
+          console.log(response);
+        if (!error && response.statusCode == 200) {
+            console.log(body);
+        }
+        res.send(response);
+    }
+);*/
+
+
+})
+
 app.get('/google/getCode', function(req, res) {
-  console.log('get');
-  // Load client secrets from a local file.
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     if (err) {
       console.log('Error loading client secret file: ' + err);
-
       return;
     }
-    // Authorize a client with the loaded credentials, then call the
-    // Gmail API.
+    
     clientSecret = JSON.parse(content).web.client_secret;
     clientId = JSON.parse(content).web.client_id;
     redirectUrl = JSON.parse(content).web.redirect_uris[0];
@@ -55,8 +115,6 @@ app.get('/google/getCode', function(req, res) {
     });
 
   });
-
-
   // use mongoose to get all todos in the database
   //res.send('get accepted');
 });
@@ -64,6 +122,8 @@ app.get('/google/getCode', function(req, res) {
 app.get('/google/getToken',function(req,res){  
   code=req.param('code');
   console.log(code);
+  auth = new googleAuth();
+  oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
   oauth2Client.getToken(code, function(err, token) {
     if (err) {
       console.log('Error while trying to retrieve access token', err);
@@ -71,29 +131,32 @@ app.get('/google/getToken',function(req,res){
     }
     oauth2Client.credentials = token;
     console.log(token);
-
     res.send(token);
     listLabels(oauth2Client);
   });
 })
 
 app.get('*', function(req, res) {
+  
         res.sendfile('./public/index.html'); // load the single view file (angular will handle the page changes on the front-end)
 });
 
     // create todo and send back all todos after creation
 app.post('/google/send', function(req, res) {
-    console.log(req.body.message);
+    var msg = req.body.message;
+    var subj = req.body.subject;
+    var emailTo = req.body.email;
     var email_lines = [];
+    var gmail = google.gmail('v1');
 
-    email_lines.push("From: \"Some Name Here\" <me>");
-    email_lines.push("To: hasnaa.ech@gmail.com");
+    email_lines.push("From: <me>");
+    email_lines.push("To:"+emailTo);
     email_lines.push('Content-type: text/html;charset=iso-8859-1');
     email_lines.push('MIME-Version: 1.0');
-    email_lines.push("Subject: New future subject here");
+    email_lines.push("Subject: "+subj);
     email_lines.push("");
-    email_lines.push("And the body text goes here");
-    email_lines.push("<b>And the bold text goes here</b>");
+    email_lines.push(msg);
+    //email_lines.push("<b>And the bold text goes here</b>");
 
     var email =email_lines.join("\r\n").trim();
 
@@ -109,19 +172,6 @@ app.post('/google/send', function(req, res) {
     })
     res.send('post accepted');
 });
-
-
-
-
-
-
-    // delete a todo
-    app.delete('/api/todos/:todo_id', function(req, res) {
-        console.log('delete request');
-        res.send('delete accepted');
-    });
-
-    
     
 
 app.listen(3000, function () {
@@ -215,7 +265,6 @@ function storeToken(token) {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 function listLabels(auth) {
-        console.log('listLabels');
   gmail = google.gmail('v1');
   gmail.users.labels.list({
     auth: auth,

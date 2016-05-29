@@ -3,8 +3,10 @@ angular.module("miniApp").factory('CommonService',function GoogleService($http,$
     var http;
     common.storeData = function (name,value){
         $localStorage[name]=value;
-    }
-    
+    };
+    common.getData = function (name){
+        return $localStorage[name];
+    };
     return common;
 });
 

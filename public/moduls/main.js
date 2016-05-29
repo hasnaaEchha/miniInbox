@@ -1,12 +1,13 @@
 (function(){
     "use strict";
-    var miniApp=angular.module("miniApp",["ui.router","ngResource","ui.bootstrap","ngCookies","ngStorage"]);
+    var miniApp=angular.module("miniApp",["ui.router","ngResource","ui.bootstrap","ngCookies","ngStorage","ngSanitize", "MassAutoComplete"]);
     miniApp.config(["$stateProvider","$urlRouterProvider", "$locationProvider",miniAppConf]);
     function miniAppConf($stateProvider,$urlRouterProvider,$locationProvider){
         $urlRouterProvider.otherwise("/")
         $stateProvider
             .state("welcome",{
-                url:"",
+                url:"/",
+
                 templateUrl:"../templates/login.html",
 
                 controller:"LoginCtrl as vm"
