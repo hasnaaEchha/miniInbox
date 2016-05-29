@@ -48,7 +48,7 @@ body {
 /***** Typography *****/
 body, p, a, th, td, li, dl { font: normal normal 300 18px/2em 'Fira Sans';}
 b, strong, dt { font-weight: 400;}
-h1, h2, h3, h4, h5, h6 { line-height: 2em;}
+h1, h2, h3, h4, h5, h6 { line-height: 2em;color: white}
 /***** Material Shadow *****/
 .shadow-top-down {
     box-shadow: 0px 8px 8px -4px rgba(0,0,0,0.75);
@@ -225,7 +225,7 @@ nav.main-menu a:link, nav.main-menu a:hover, nav.main-menu a:focus, nav.main-men
 }
 #templatemo_features .feature-box:hover {
     padding: 0;
-    color: #fff;
+    
 }
 #templatemo_features .feature-box .feature-box-inner {
     box-shadow: inset 0px 0px 0 10px #cecece;
@@ -288,7 +288,6 @@ footer {
     nav.main-menu {right: 30px;}
 }
 @media (max-width: 767px) {
-    #templatemo_download h2 {font-size: 70px;}
     #templatemo_home h2 {font-size: 26px;}
 }
 @media (max-width: 400px) {

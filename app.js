@@ -10,7 +10,6 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 var request = require('request');
 var OAuth2 = require('oauth').OAuth2;
-var FB = require('fb');
 
 app.use(express.static(__dirname + '/public'));
 app.use(morgan('dev'));

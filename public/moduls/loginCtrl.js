@@ -28,12 +28,8 @@
         };
         vm.initFacebookLogIn=function() {
             CommonService.storeData('socialMedia','facebook');
-            FacebookService.getCode().then(function(response){
-                //$window.location.href=response.data;
-                $window.location.href="http://www.facebook.com/dialog/send?app_id=1559740410998013&link=https://developers.facebook.com/apps&redirect_uri=http://localhost:3000/"
-            }, function(error){
-                console.log(error);
-            });            
+            $window.location.href="http://www.facebook.com/dialog/send?app_id=1559740410998013&link=https://developers.facebook.com/apps&redirect_uri=http://localhost:3000/";
+                        
         };
         function getClientCode(){
             if($location.absUrl().split('?').length>1){
@@ -48,8 +44,8 @@
                     })
                      
                 }
-                console.log(CommonService.getData('socialMedia'))
-                if(CommonService.getData('socialMedia').localeCompare('facebook')==0){
+                
+                /*if(CommonService.getData('socialMedia').localeCompare('facebook')==0){
                    FacebookService.getToken(code).then(function(response){
                     CommonService.storeData('facebookToken',response['data']);
                     console.log(response);
@@ -58,7 +54,7 @@
                         console.log(error)
                     })
                      
-                }
+                }*/
                     
                 
             }
