@@ -15,8 +15,14 @@ angular.module("miniApp").factory('GoogleService',function GoogleService($http) 
 
         return http;
     };
+    
     google.sendMail = function (email,subject,message) {
         http = $http.post("google/send",{email:email,subject:subject,message:message});
+
+        return http;
+    };
+    google.getUnreadCount = function (token) {
+        http = $http.get("google/unread?"+"accessToken="+token.access_token );
 
         return http;
     };

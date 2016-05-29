@@ -204,7 +204,7 @@ angular.module('MassAutoComplete', [])
         // because we watch the model value and setting it will trigger
         // a new suggestion cycle.
         var selected = $scope.results[i];
-        $rootScope.idFacebook=selected.id;
+        //$rootScope.idFacebook=selected.id;
         current_element.val({value:selected.value});
         $scope.selected_index = i;
         return selected;

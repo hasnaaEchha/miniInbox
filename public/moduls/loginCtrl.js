@@ -34,12 +34,16 @@
         function getClientCode(){
             if($location.absUrl().split('?').length>1){
                 var code = $location.absUrl().split('?')[1].split('=')[1];
+
                 CommonService.storeData('code',code);
                 if(CommonService.getData('socialMedia').localeCompare('google')==0){
                    GoogleService.getToken(code).then(function(response){
-                    CommonService.storeData('googleToken',response['data']);
-                    $state.go('sendMail');
+                        CommonService.storeData('googleToken',response['data']);
+                        CommonService.storeData('startTime',new Date());
+                        $state.go('sendMail');
                     },function(error){
+
+                        
                         console.log(error)
                     })
                      

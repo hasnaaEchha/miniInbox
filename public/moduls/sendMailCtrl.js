@@ -7,6 +7,7 @@
             'GoogleService',
             'FacebookService',
             'CommonService',
+            'blockUI',
             '$rootScope',
             '$state',
             '$location',
@@ -15,13 +16,27 @@
             '$localStorage',
             '$sce',
             SendMailCtrl]);
-    function SendMailCtrl(GoogleService,FacebookService,CommonService,$rootScope,$state,$location,$window,$timeout, $localStorage,$sce){
+    function SendMailCtrl(GoogleService,FacebookService,CommonService,blockUI,$rootScope,$state,$location,$window,$timeout, $localStorage,$sce){
         var vm=this;
+        var socket = io.connect("http://localhost:3000");
+        socket.on('checkMail', function(msg){
+            GoogleService.getUnreadCount($localStorage['googleToken']).then(function(response){
+                vm.unreadMail=response.data;
+            },function(error){
+                console.log(error);
+            })
+        });
         function init(){
+            GoogleService.getUnreadCount($localStorage['googleToken']).then(function(response){
+                vm.unreadMail=response.data;
+            },function(error){
+                console.log(error);
+            })
             vm.identifier = {};
             if(CommonService.getData('socialMedia').localeCompare('google')==0){
+                blockUI.start();
                 GoogleService.getContacts($localStorage['googleToken']).then(function(response){
-                    console.log(response);
+                    blockUI.stop();
                     CommonService.storeData('author',response['data'].feed.author[0]);
                     var entries = response['data'].feed.entry;
                     vm.contacts= [];
@@ -32,6 +47,7 @@
                         )
                     }
                 }, function(error){
+                    $window.location.href("/");
                     console.log(error);
                 })
             }
@@ -39,8 +55,7 @@
 
                 FacebookService.getContacts($localStorage['facebookToken']).then(function(response){
                     var entries = response['data']['data'];
-                    console.log(entries);
-                    console.log(response);
+
                     vm.contacts= [];
                     for (var i=0;i<entries.length;i++){
                         vm.contacts.push(
@@ -58,8 +73,13 @@
         init();
         vm.sendMail=function(){
             if(CommonService.getData('socialMedia').localeCompare('google')==0){
+                blockUI.start();
                 GoogleService.sendMail(vm.identifier.value,vm.subject,vm.message).then(function(response){
+                    vm.message="";
+                    vm.subject="";
                     vm.identifier={};
+
+                    blockUI.stop();
                 },function(error){
                     console.log(error);
                 })
